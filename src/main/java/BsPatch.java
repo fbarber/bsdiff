@@ -8,26 +8,31 @@ import java.util.Arrays;
 
 public class BsPatch implements Runnable {
 
+    private static int unsigned(byte b) {
+        return ((int) b) & 0xFF;
+    }
+
     static int offtin(byte buf[]) {
         int y;
 
-        y = buf[7] & 0x7F;
+        y = unsigned(buf[7]) & 0x7F;
         y = y * 256;
-        y += buf[6];
+        y += unsigned(buf[6]);
         y = y * 256;
-        y += buf[5];
+        y += unsigned(buf[5]);
         y = y * 256;
-        y += buf[4];
+        y += unsigned(buf[4]);
         y = y * 256;
-        y += buf[3];
+        y += unsigned(buf[3]);
         y = y * 256;
-        y += buf[2];
+        y += unsigned(buf[2]);
         y = y * 256;
-        y += buf[1];
+        y += unsigned(buf[1]);
         y = y * 256;
-        y += buf[0];
+        y += unsigned(buf[0]);
 
-        if ((buf[7] & 0x80) > 0) y = -y;
+        if ((unsigned(buf[7]) & 0x80) > 0)
+            y = -y;
 
         return y;
     }
@@ -219,8 +224,15 @@ public class BsPatch implements Runnable {
 
             /* Add old data to diff string */
             for (i = 0; i < ctrl[0]; i++)
-                if ((oldpos + i >= 0) && (oldpos + i < oldsize))
+                if ((oldpos + i >= 0) && (oldpos + i < oldsize)) {
+                    /*
+                     * Don't need unsigned() here because we need the byte to
+                     * overflow/underflow. Sadly, 255 + 255 = 254, whereas -128
+                     * + -128 = 0. Hopefully is it possible for us to get such
+                     * values?
+                     */
                     newS[newpos + i] += old[oldpos + i];
+                }
 
             /* Adjust pointers */
             newpos += ctrl[0];
